@@ -5,10 +5,13 @@ html(lang="es")
         meta(name="viewport", content="width=device-width, initial-scale=1.0")
         title Bienes Raices | #{pagina}
         link(rel="stylesheet", href="/css/app.css")
-
+        block estilos
     body.min-h-screen.bg-gray-200
         if barra
             include header
 
         main.container.mx-auto
             block contenido
+
+        block scripts 
+        

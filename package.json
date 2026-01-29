@@ -14,7 +14,9 @@
   "scripts": {
     "start": "node index.js",
     "server": "nodemon index.js",
-    "css": "postcss public/css/tailwind.css -o public/css/app.css --watch"
+    "css": "postcss public/css/tailwind.css -o public/css/app.css --watch",
+    "js": "webpack --watch",
+    "dev": "concurrently \"npm run css\" \"npm run js\" "
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -32,9 +34,12 @@
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.18",
     "autoprefixer": "^10.4.23",
+    "concurrently": "^9.2.1",
     "nodemon": "^3.1.11",
     "postcss": "^8.5.6",
     "postcss-cli": "^11.0.1",
-    "tailwindcss": "^3.3.5"
+    "tailwindcss": "^3.3.5",
+    "webpack": "^5.104.1",
+    "webpack-cli": "^6.0.1"
   }
 }
