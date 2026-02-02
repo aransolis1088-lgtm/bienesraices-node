@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import db from "../config/db.js";
-import bcrypt from 'bcrypt';
+import bcrypt from "bcrypt";
 
 const Usuario = db.define(
   "usuarios",
@@ -22,19 +22,31 @@ const Usuario = db.define(
   },
   {
     timestamps: true,
-  },
-  {
+
     hooks: {
       beforeCreate: async (usuario) => {
         const salt = await bcrypt.genSalt(10);
         usuario.password = await bcrypt.hash(usuario.password, salt);
-      }
-    }
-  }
+      },
+    },
+    scopes: {
+      eliminarPassword: {
+        attributes: {
+          exclude: [
+            "password",
+            "token",
+            "confirmado",
+            "createdAt",
+            "updatedAt",
+          ],
+        },
+      },
+    },
+  },
 );
 
-Usuario.prototype.verificarPassword =  function(password) {
+Usuario.prototype.verificarPassword = function (password) {
   return bcrypt.compareSync(password, this.password);
-}
+};
 
 export default Usuario;

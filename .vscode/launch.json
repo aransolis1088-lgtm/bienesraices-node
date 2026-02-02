@@ -4,11 +4,12 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug Node (nodemon)",
+      "name": "Launch via Nodemon",
       "runtimeExecutable": "nodemon",
-      "runtimeArgs": ["--inspect"],
       "program": "${workspaceFolder}/index.js",
       "restart": true,
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
       "console": "integratedTerminal"
     }
   ]

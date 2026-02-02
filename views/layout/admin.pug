@@ -4,9 +4,12 @@ html(lang="es")
         meta(charset="UTF-8")
         meta(name="viewport", content="width=device-width, initial-scale=1.0")
         title Bienes Raices | #{pagina}
-        link(rel="stylesheet", href="/css/app.css")
         block estilos
+        link(rel="stylesheet", href="/css/app.css")
+
     body.min-h-screen.bg-gray-200
+        include includes/header-admin
+
         main.container.mx-auto
             block contenido
 
