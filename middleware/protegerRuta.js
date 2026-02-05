@@ -17,7 +17,6 @@ const protegerRuta = async (req, res, next) => {
       decoded.id,
     );
 
-    console.log(usuario);
     //Almacenar el usuario en el req, para que esté disponible en los siguientes middleware o controladores
     if (usuario) {
       req.usuario = usuario;
