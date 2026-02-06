@@ -1,3 +1,4 @@
+import {unlink} from 'node:fs/promises'
 import { validationResult } from "express-validator";
 import { Precio, Categoria, Propiedad } from "../models/index.js";
 
@@ -16,6 +17,7 @@ const admin = async (req, res) => {
   res.render("propiedades/admin", {
     pagina: "Mis Propiedades",
     propiedades,
+    csrFToken: req.csrfToken(),
   });
 };
 
@@ -215,30 +217,61 @@ const guardarCambios = async (req, res) => {
 
   //Reescribir el objeto y actualizarlo
 
-  try{
-      const {titulo,descripcion,habitaciones,estacionamiento,wc,calle,latitud,longitud,precio: precioId,categoria: categoriaId,} = req.body;
+  try {
+    const {
+      titulo,
+      descripcion,
+      habitaciones,
+      estacionamiento,
+      wc,
+      calle,
+      latitud,
+      longitud,
+      precio: precioId,
+      categoria: categoriaId,
+    } = req.body;
 
-      propiedad.set({
-        titulo,
-        descripcion,
-        habitaciones,
-        estacionamiento,
-        wc,
-        calle,
-        latitud,
-        longitud,
-        precioId,
-        categoriaId
-      })
+    propiedad.set({
+      titulo,
+      descripcion,
+      habitaciones,
+      estacionamiento,
+      wc,
+      calle,
+      latitud,
+      longitud,
+      precioId,
+      categoriaId,
+    });
 
-      await propiedad.save();
+    await propiedad.save();
 
-      res.redirect('/mis-propiedades')
+    res.redirect("/mis-propiedades");
+  } catch (error) {
+    console.log(error);
+  }
+};
 
-  }catch(error){
-    console.log(error)
+const eliminar = async (req, resp) => {
+  const { id } = req.params;
+
+  //Validar que la propiedad exista
+  const propiedad = await Propiedad.findByPk(id);
+
+  if (!propiedad) {
+    return resp.redirect("/mis-propiedades");
   }
 
+  //Revisar que usuario quien consulta es quien creo propiedad
+  if (propiedad.usuarioId.toString() !== req.usuario.id.toString()) {
+    return resp.redirect("/mis-propiedades");
+  }
+  //Eliminar imagen
+  await unlink(`public/uploads/${propiedad.imagen}`)
+
+  //Eliminar propiedad
+  await propiedad.destroy();
+  resp.redirect("/mis-propiedades");
 };
 
 export {
@@ -249,4 +282,5 @@ export {
   almacenarImagen,
   editar,
   guardarCambios,
+  eliminar,
 };
