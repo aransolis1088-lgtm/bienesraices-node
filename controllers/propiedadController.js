@@ -1,4 +1,4 @@
-import {unlink} from 'node:fs/promises'
+import { unlink } from "node:fs/promises";
 import { validationResult } from "express-validator";
 import { Precio, Categoria, Propiedad } from "../models/index.js";
 
@@ -267,11 +267,33 @@ const eliminar = async (req, resp) => {
     return resp.redirect("/mis-propiedades");
   }
   //Eliminar imagen
-  await unlink(`public/uploads/${propiedad.imagen}`)
+  await unlink(`public/uploads/${propiedad.imagen}`);
 
   //Eliminar propiedad
   await propiedad.destroy();
   resp.redirect("/mis-propiedades");
+};
+
+//Muestra una propiedad
+const mostrarPropiedad = async (req, resp) => {
+  const { id } = req.params;
+
+  //Comprobar que propiedad exista
+  const propiedad = await Propiedad.findByPk(id, {
+    include: [
+      { model: Precio, as: "precio" },
+      { model: Categoria, as: "categoria" },
+    ],
+  });
+
+  if (!propiedad) {
+    return resp.redirect("/404");
+  }
+
+  resp.render("propiedades/mostrar", {
+    propiedad,
+    pagina: propiedad.titulo,
+  });
 };
 
 export {
@@ -283,4 +305,5 @@ export {
   editar,
   guardarCambios,
   eliminar,
+  mostrarPropiedad,
 };
