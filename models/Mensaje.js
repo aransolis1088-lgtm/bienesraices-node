@@ -1,13 +1,17 @@
-import {DataTypes} from 'sequelize';
-import db from '../config/db.js';
+import { DataTypes } from "sequelize";
+import db from "../config/db.js";
 
-const Mensaje = db.define('mensajes', {
-
+const Mensaje = db.define(
+  "mensajes",
+  {
     mensaje: {
-        type: DataTypes.STRING(200),
-        allowNull: false
-    }
-
-});
+      type: DataTypes.STRING(200),
+      allowNull: false,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
 export default Mensaje;

@@ -62,11 +62,17 @@ const autenticar = async (req, res) => {
   const token = generarJWT(usuario.id);
 
   //Almacenar el JWT en un cookie
-  res.cookie("_token", token, {
-    httpOnly: true,
-    // secure: true, //Solo en producción con HTTPS
-    maxAge: 24 * 60 * 60 * 1000, //1 día
-  }).redirect("/mis-propiedades");
+  res
+    .cookie("_token", token, {
+      httpOnly: true,
+      // secure: true, //Solo en producción con HTTPS
+      maxAge: 24 * 60 * 60 * 1000, //1 día
+    })
+    .redirect("/mis-propiedades");
+};
+
+const cerrarSesion = async (req, res) => {
+  return res.clearCookie('_token').status(200).redirect('/auth/login')
 };
 
 const formularioRegistro = (req, res) => {
@@ -279,6 +285,7 @@ const nuevoPassword = async (req, res) => {
 export {
   formularioLogin,
   formularioRegistro,
+  cerrarSesion,
   formularioOlvidePassword,
   registrarUsuario,
   confirmar,

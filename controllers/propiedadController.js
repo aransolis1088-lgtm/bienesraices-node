@@ -1,7 +1,13 @@
 import { unlink } from "node:fs/promises";
 import { validationResult } from "express-validator";
-import { Precio, Categoria, Propiedad, Mensaje } from "../models/index.js";
-import { esVendedor } from "../helpers/index.js";
+import {
+  Precio,
+  Categoria,
+  Propiedad,
+  Mensaje,
+  Usuario,
+} from "../models/index.js";
+import { esVendedor, formatearFecha } from "../helpers/index.js";
 
 const admin = async (req, res) => {
   //leer QueryString
@@ -30,6 +36,7 @@ const admin = async (req, res) => {
         include: [
           { model: Categoria, as: "categoria" },
           { model: Precio, as: "precio" },
+          { model: Mensaje, as: "mensajes" },
         ],
       }),
       Propiedad.count({
@@ -307,6 +314,32 @@ const eliminar = async (req, resp) => {
   resp.redirect("/mis-propiedades");
 };
 
+//Modifica el estado de la propiedad
+const cambiarEstado = async (req, resp) => {
+  const { id } = req.params;
+
+  //Validar que la propiedad exista
+  const propiedad = await Propiedad.findByPk(id);
+
+  if (!propiedad) {
+    return resp.redirect("/mis-propiedades");
+  }
+
+  //Revisar que usuario quien consulta es quien creo propiedad
+  if (propiedad.usuarioId.toString() !== req.usuario.id.toString()) {
+    return resp.redirect("/mis-propiedades");
+  }
+
+  //Actualizar
+  propiedad.publicado = !propiedad.publicado;
+
+  await propiedad.save();
+
+  resp.json({
+    resultado: true,
+  });
+};
+
 //Muestra una propiedad
 const mostrarPropiedad = async (req, resp) => {
   const { id } = req.params;
@@ -319,7 +352,7 @@ const mostrarPropiedad = async (req, resp) => {
     ],
   });
 
-  if (!propiedad) {
+  if (!propiedad || !propiedad.publicado) {
     return resp.redirect("/404");
   }
 
@@ -361,14 +394,14 @@ const enviarMensaje = async (req, resp) => {
   }
 
   //Almacenar el mensaje
-  const {mensaje} = req.body
-  const {id: propiedadId} = req.params
-  const {id: usuarioId} = req.usuario
+  const { mensaje } = req.body;
+  const { id: propiedadId } = req.params;
+  const { id: usuarioId } = req.usuario;
   await Mensaje.create({
     mensaje,
     propiedadId,
-    usuarioId
-  })
+    usuarioId,
+  });
 
   // resp.render("propiedades/mostrar", {
   //   propiedad,
@@ -379,8 +412,39 @@ const enviarMensaje = async (req, resp) => {
   //   enviado: true
   // });
 
-  resp.redirect('/')
-}
+  resp.redirect("/");
+};
+
+//Leer mensajes recibidos
+const verMensajes = async (req, resp) => {
+  const { id } = req.params;
+
+  //Validar que la propiedad exista
+  const propiedad = await Propiedad.findByPk(id, {
+    include: [
+      {
+        model: Mensaje,
+        as: "mensajes",
+        include: [{ model: Usuario.scope("eliminarPassword"), as: "usuario" }],
+      },
+    ],
+  });
+
+  if (!propiedad) {
+    return resp.redirect("/mis-propiedades");
+  }
+
+  //Revisar que usuario quien consulta es quien creo propiedad
+  if (propiedad.usuarioId.toString() !== req.usuario.id.toString()) {
+    return resp.redirect("/mis-propiedades");
+  }
+
+  resp.render("propiedades/mensajes", {
+    pagina: "Mensajes",
+    mensajes: propiedad.mensajes,
+    formatearFecha,
+  });
+};
 
 export {
   admin,
@@ -391,6 +455,8 @@ export {
   editar,
   guardarCambios,
   eliminar,
+  cambiarEstado,
   mostrarPropiedad,
   enviarMensaje,
+  verMensajes,
 };
