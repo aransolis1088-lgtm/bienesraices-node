@@ -1,6 +1,7 @@
 import { unlink } from "node:fs/promises";
 import { validationResult } from "express-validator";
-import { Precio, Categoria, Propiedad } from "../models/index.js";
+import { Precio, Categoria, Propiedad, Mensaje } from "../models/index.js";
+import { esVendedor } from "../helpers/index.js";
 
 const admin = async (req, res) => {
   //leer QueryString
@@ -33,20 +34,20 @@ const admin = async (req, res) => {
       }),
       Propiedad.count({
         where: {
-          usuarioId:id
-        }
-      })
+          usuarioId: id,
+        },
+      }),
     ]);
 
     res.render("propiedades/admin", {
       pagina: "Mis Propiedades",
       propiedades,
       csrFToken: req.csrfToken(),
-      paginas: Math.ceil(total/limit),
+      paginas: Math.ceil(total / limit),
       paginaActual: Number(paginaActual),
       total,
       offset,
-      limit
+      limit,
     });
   } catch (error) {
     console.log(error);
@@ -325,10 +326,61 @@ const mostrarPropiedad = async (req, resp) => {
   resp.render("propiedades/mostrar", {
     propiedad,
     pagina: propiedad.titulo,
-    csrfToken: req.csrfToken()
-
+    csrfToken: req.csrfToken(),
+    usuario: req.usuario,
+    esVendedor: esVendedor(req.usuario?.id, propiedad.usuarioId),
   });
 };
+
+const enviarMensaje = async (req, resp) => {
+  const { id } = req.params;
+
+  //Comprobar que propiedad exista
+  const propiedad = await Propiedad.findByPk(id, {
+    include: [
+      { model: Precio, as: "precio" },
+      { model: Categoria, as: "categoria" },
+    ],
+  });
+
+  if (!propiedad) {
+    return resp.redirect("/404");
+  }
+
+  //Renderizar los errores
+  let resultado = validationResult(req);
+  if (!resultado.isEmpty()) {
+    return resp.render("propiedades/mostrar", {
+      propiedad,
+      pagina: propiedad.titulo,
+      csrfToken: req.csrfToken(),
+      usuario: req.usuario,
+      esVendedor: esVendedor(req.usuario?.id, propiedad.usuarioId),
+      errores: resultado.array(),
+    });
+  }
+
+  //Almacenar el mensaje
+  const {mensaje} = req.body
+  const {id: propiedadId} = req.params
+  const {id: usuarioId} = req.usuario
+  await Mensaje.create({
+    mensaje,
+    propiedadId,
+    usuarioId
+  })
+
+  // resp.render("propiedades/mostrar", {
+  //   propiedad,
+  //   pagina: propiedad.titulo,
+  //   csrfToken: req.csrfToken(),
+  //   usuario: req.usuario,
+  //   esVendedor: esVendedor(req.usuario?.id, propiedad.usuarioId),
+  //   enviado: true
+  // });
+
+  resp.redirect('/')
+}
 
 export {
   admin,
@@ -340,4 +392,5 @@ export {
   guardarCambios,
   eliminar,
   mostrarPropiedad,
+  enviarMensaje,
 };
